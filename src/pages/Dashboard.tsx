@@ -17,18 +17,16 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center gradient-calm">
+      <div className="min-h-screen flex items-center justify-center gradient-dark">
         <div className="text-center animate-pulse">
-          <div className="w-12 h-12 rounded-full gradient-sage mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <div className="w-14 h-14 rounded-xl gradient-neon mx-auto mb-4 shadow-neon animate-pulse-neon"></div>
+          <p className="text-muted-foreground font-mono text-sm">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <SidebarProvider>

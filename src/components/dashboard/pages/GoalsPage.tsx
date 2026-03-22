@@ -5,15 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { 
-  Target, 
-  Plus,
-  Trash2,
-  Edit2,
-  Calendar,
-  CheckCircle2,
-  Trophy
-} from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, Calendar, CheckCircle2, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { GoalDialog } from '@/components/dashboard/dialogs/GoalDialog';
 
@@ -37,19 +29,11 @@ export function GoalsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  useEffect(() => {
-    if (user) fetchGoals();
-  }, [user]);
+  useEffect(() => { if (user) fetchGoals(); }, [user]);
 
   const fetchGoals = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', user?.id)
-      .order('completed', { ascending: true })
-      .order('deadline', { ascending: true, nullsFirst: false });
-    
+    const { data } = await supabase.from('goals').select('*').eq('user_id', user?.id).order('completed').order('deadline', { ascending: true, nullsFirst: false });
     setGoals(data || []);
     setLoading(false);
   };
@@ -57,23 +41,9 @@ export function GoalsPage() {
   const updateProgress = async (goalId: string, newValue: number) => {
     const goal = goals.find(g => g.id === goalId);
     if (!goal) return;
-
     const completed = newValue >= goal.target_value;
-    
-    await supabase
-      .from('goals')
-      .update({ 
-        current_value: Math.min(newValue, goal.target_value),
-        completed,
-        completed_at: completed ? new Date().toISOString() : null
-      })
-      .eq('id', goalId);
-    
-    setGoals(goals.map(g => 
-      g.id === goalId 
-        ? { ...g, current_value: Math.min(newValue, goal.target_value), completed }
-        : g
-    ));
+    await supabase.from('goals').update({ current_value: Math.min(newValue, goal.target_value), completed, completed_at: completed ? new Date().toISOString() : null }).eq('id', goalId);
+    setGoals(goals.map(g => g.id === goalId ? { ...g, current_value: Math.min(newValue, goal.target_value), completed } : g));
   };
 
   const deleteGoal = async (goalId: string) => {
@@ -87,10 +57,8 @@ export function GoalsPage() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-10 bg-muted rounded w-1/4"></div>
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-32 bg-muted rounded-xl"></div>
-        ))}
+        <div className="h-10 bg-secondary rounded w-1/4"></div>
+        {[1, 2, 3].map(i => (<div key={i} className="h-32 bg-secondary rounded-xl"></div>))}
       </div>
     );
   }
@@ -99,146 +67,83 @@ export function GoalsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Goals</h1>
-          <p className="text-muted-foreground">Track your progress and celebrate wins</p>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Goals</h1>
+          <p className="text-muted-foreground font-mono text-sm">Track your progress and celebrate wins</p>
         </div>
-        <Button onClick={() => { setEditingGoal(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Goal
+        <Button onClick={() => { setEditingGoal(null); setDialogOpen(true); }} className="shadow-neon">
+          <Plus className="h-4 w-4 mr-2" /> New Goal
         </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-progress/10 flex items-center justify-center">
-              <Target className="h-6 w-6 text-progress" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{activeGoals.length}</p>
-              <p className="text-sm text-muted-foreground">Active Goals</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
-              <Trophy className="h-6 w-6 text-success" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{completedGoals.length}</p>
-              <p className="text-sm text-muted-foreground">Completed</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-streak/10 flex items-center justify-center">
-              <CheckCircle2 className="h-6 w-6 text-streak" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {goals.length > 0 
-                  ? Math.round(goals.reduce((acc, g) => acc + (g.current_value / g.target_value), 0) / goals.length * 100)
-                  : 0}%
-              </p>
-              <p className="text-sm text-muted-foreground">Avg Progress</p>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: 'Active Goals', value: activeGoals.length, icon: Target, color: 'text-progress' },
+          { label: 'Completed', value: completedGoals.length, icon: Trophy, color: 'text-success' },
+          { label: 'Avg Progress', value: `${goals.length > 0 ? Math.round(goals.reduce((acc, g) => acc + (g.current_value / g.target_value), 0) / goals.length * 100) : 0}%`, icon: CheckCircle2, color: 'text-streak' },
+        ].map((stat, i) => (
+          <Card key={i} className="neon-card animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold font-mono text-foreground">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Active Goals */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Active Goals</h2>
+        <h2 className="text-lg font-serif font-semibold text-foreground">Active Goals</h2>
         {activeGoals.length === 0 ? (
-          <Card className="border-0 shadow-md">
+          <Card className="neon-card">
             <CardContent className="py-12 text-center">
-              <Target className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+              <Target className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
               <p className="text-muted-foreground">No active goals yet</p>
-              <Button variant="soft" className="mt-4" onClick={() => setDialogOpen(true)}>
-                Create your first goal
-              </Button>
+              <Button variant="soft" className="mt-4" onClick={() => setDialogOpen(true)}>Create your first goal</Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeGoals.map((goal, index) => {
               const progress = (goal.current_value / goal.target_value) * 100;
-              
               return (
-                <Card 
-                  key={goal.id} 
-                  className="border-0 shadow-md animate-slide-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
+                <Card key={goal.id} className="neon-card hover:shadow-neon transition-all duration-300 animate-scale-in" style={{ animationDelay: `${index * 80}ms` }}>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="font-semibold text-lg">{goal.title}</h3>
-                        {goal.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>
-                        )}
+                        <h3 className="font-serif font-semibold text-lg text-foreground">{goal.title}</h3>
+                        {goal.description && <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>}
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
-                            {goal.category}
-                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize font-mono">{goal.category}</span>
                           {goal.deadline && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Due {format(new Date(goal.deadline), 'MMM d, yyyy')}
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-mono">
+                              <Calendar className="h-3 w-3" /> Due {format(new Date(goal.deadline), 'MMM d, yyyy')}
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon-sm" 
-                          onClick={() => { setEditingGoal(goal); setDialogOpen(true); }}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon-sm" 
-                          onClick={() => deleteGoal(goal.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <Button variant="ghost" size="icon-sm" onClick={() => { setEditingGoal(goal); setDialogOpen(true); }} className="text-muted-foreground hover:text-primary"><Edit2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon-sm" onClick={() => deleteGoal(goal.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </div>
-
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
-                        <span className="font-semibold text-primary">{Math.round(progress)}%</span>
+                        <span className="font-bold font-mono text-primary neon-text-subtle">{Math.round(progress)}%</span>
                       </div>
-                      <Progress value={progress} className="h-3" />
+                      <Progress value={progress} className="h-2" />
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={goal.current_value}
-                            onChange={(e) => updateProgress(goal.id, Number(e.target.value))}
-                            className="w-20 h-8 text-sm"
-                            min={0}
-                            max={goal.target_value}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            / {goal.target_value} {goal.unit}
-                          </span>
+                          <Input type="number" value={goal.current_value} onChange={(e) => updateProgress(goal.id, Number(e.target.value))} className="w-20 h-8 text-sm bg-secondary border-border font-mono" min={0} max={goal.target_value} />
+                          <span className="text-sm text-muted-foreground font-mono">/ {goal.target_value} {goal.unit}</span>
                         </div>
-                        <Button 
-                          variant="soft" 
-                          size="sm"
-                          onClick={() => updateProgress(goal.id, goal.current_value + 1)}
-                        >
-                          +1
-                        </Button>
+                        <Button variant="soft" size="sm" onClick={() => updateProgress(goal.id, goal.current_value + 1)}>+1</Button>
                       </div>
                     </div>
                   </CardContent>
@@ -252,34 +157,23 @@ export function GoalsPage() {
       {/* Completed Goals */}
       {completedGoals.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-success flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            Completed Goals
+          <h2 className="text-lg font-serif font-semibold text-success flex items-center gap-2">
+            <Trophy className="h-5 w-5" /> Completed Goals
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completedGoals.map((goal, index) => (
-              <Card 
-                key={goal.id} 
-                className="border-0 shadow-md bg-success/5 animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
+              <Card key={goal.id} className="neon-card border-success/20 animate-slide-up" style={{ animationDelay: `${index * 60}ms` }}>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
                       <CheckCircle2 className="h-5 w-5 text-success" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{goal.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {goal.target_value} {goal.unit} achieved
-                      </p>
+                      <h3 className="font-semibold text-foreground">{goal.title}</h3>
+                      <p className="text-sm text-muted-foreground font-mono">{goal.target_value} {goal.unit} achieved</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon-sm" 
-                      onClick={() => deleteGoal(goal.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    <Button variant="ghost" size="icon-sm" onClick={() => deleteGoal(goal.id)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -289,12 +183,7 @@ export function GoalsPage() {
         </div>
       )}
 
-      <GoalDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        onSuccess={fetchGoals}
-        editGoal={editingGoal}
-      />
+      <GoalDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={fetchGoals} editGoal={editingGoal} />
     </div>
   );
 }

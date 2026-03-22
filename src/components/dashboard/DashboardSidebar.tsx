@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -11,7 +10,6 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -24,8 +22,7 @@ import {
   Calendar,
   BarChart3,
   LogOut,
-  Leaf,
-  Settings,
+  Zap,
 } from 'lucide-react';
 
 const navItems = [
@@ -49,13 +46,13 @@ export function DashboardSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
+    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar">
       <SidebarHeader className="p-4">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-sage flex items-center justify-center flex-shrink-0">
-            <Leaf className="h-4 w-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg gradient-neon flex items-center justify-center flex-shrink-0 shadow-neon">
+            <Zap className="h-4 w-4 text-primary-foreground" />
           </div>
-          {!collapsed && <span className="font-bold text-lg">Bloom</span>}
+          {!collapsed && <span className="font-serif font-bold text-lg neon-text-subtle text-foreground">NeonFlow</span>}
         </Link>
       </SidebarHeader>
 
@@ -76,10 +73,10 @@ export function DashboardSidebar() {
                     >
                       <Link
                         to={item.url}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
+                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-300 ${
                           isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-muted'
+                            ? 'bg-primary text-primary-foreground shadow-neon'
+                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                         }`}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -96,14 +93,14 @@ export function DashboardSidebar() {
 
       <SidebarFooter className="p-4 border-t border-border">
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+          <Avatar className="h-8 w-8 border border-primary/30">
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-mono">
               {getUserInitials()}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.email}</p>
+              <p className="text-sm font-medium truncate text-foreground">{user?.email}</p>
             </div>
           )}
         </div>

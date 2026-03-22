@@ -8,27 +8,14 @@ import {
   CheckCircle2, 
   Flame, 
   Target,
-  Calendar
+  Sparkles
 } from 'lucide-react';
-import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
-interface Task {
-  id: string;
-  completed: boolean;
-  completed_at: string | null;
-  created_at: string;
-}
-
-interface HabitLog {
-  completed_date: string;
-}
-
-interface Goal {
-  current_value: number;
-  target_value: number;
-  completed: boolean;
-}
+interface Task { id: string; completed: boolean; completed_at: string | null; created_at: string; }
+interface HabitLog { completed_date: string; }
+interface Goal { current_value: number; target_value: number; completed: boolean; }
 
 export function AnalyticsPage() {
   const { user } = useAuth();
@@ -36,10 +23,6 @@ export function AnalyticsPage() {
   const [habitLogs, setHabitLogs] = useState<HabitLog[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const last30Days = Array.from({ length: 30 }, (_, i) => 
-    format(subDays(new Date(), 29 - i), 'yyyy-MM-dd')
-  );
 
   useEffect(() => {
     if (user) fetchData();
@@ -50,20 +33,9 @@ export function AnalyticsPage() {
     const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
 
     const [tasksRes, logsRes, goalsRes] = await Promise.all([
-      supabase
-        .from('tasks')
-        .select('id, completed, completed_at, created_at')
-        .eq('user_id', user?.id)
-        .gte('created_at', thirtyDaysAgo),
-      supabase
-        .from('habit_logs')
-        .select('completed_date')
-        .eq('user_id', user?.id)
-        .gte('completed_date', thirtyDaysAgo),
-      supabase
-        .from('goals')
-        .select('current_value, target_value, completed')
-        .eq('user_id', user?.id)
+      supabase.from('tasks').select('id, completed, completed_at, created_at').eq('user_id', user?.id).gte('created_at', thirtyDaysAgo),
+      supabase.from('habit_logs').select('completed_date').eq('user_id', user?.id).gte('completed_date', thirtyDaysAgo),
+      supabase.from('goals').select('current_value, target_value, completed').eq('user_id', user?.id)
     ]);
 
     setTasks(tasksRes.data || []);
@@ -72,143 +44,104 @@ export function AnalyticsPage() {
     setLoading(false);
   };
 
-  // Calculate stats
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.completed).length;
   const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   const totalHabitLogs = habitLogs.length;
   const avgHabitsPerDay = Math.round(totalHabitLogs / 30 * 10) / 10;
-
-  const totalGoals = goals.length;
   const completedGoals = goals.filter(g => g.completed).length;
   const avgGoalProgress = goals.length > 0
     ? Math.round(goals.reduce((acc, g) => acc + (g.current_value / g.target_value), 0) / goals.length * 100)
     : 0;
 
-  // Prepare chart data
   const weeklyTaskData = (() => {
-    const days = eachDayOfInterval({
-      start: startOfWeek(new Date()),
-      end: endOfWeek(new Date())
-    });
-
+    const days = eachDayOfInterval({ start: startOfWeek(new Date()), end: endOfWeek(new Date()) });
     return days.map(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
-      const dayTasks = tasks.filter(t => 
-        t.completed_at && format(new Date(t.completed_at), 'yyyy-MM-dd') === dateStr
-      );
-      return {
-        name: format(day, 'EEE'),
-        completed: dayTasks.length
-      };
+      const dayTasks = tasks.filter(t => t.completed_at && format(new Date(t.completed_at), 'yyyy-MM-dd') === dateStr);
+      return { name: format(day, 'EEE'), completed: dayTasks.length };
     });
   })();
 
   const habitTrendData = (() => {
-    const last7Days = Array.from({ length: 7 }, (_, i) => 
-      format(subDays(new Date(), 6 - i), 'yyyy-MM-dd')
-    );
-
-    return last7Days.map(date => ({
-      name: format(new Date(date), 'EEE'),
+    const last14Days = Array.from({ length: 14 }, (_, i) => format(subDays(new Date(), 13 - i), 'yyyy-MM-dd'));
+    return last14Days.map(date => ({
+      name: format(new Date(date), 'dd'),
       habits: habitLogs.filter(l => l.completed_date === date).length
     }));
   })();
 
   const taskDistributionData = [
-    { name: 'Completed', value: completedTasks, color: 'hsl(var(--success))' },
-    { name: 'Pending', value: totalTasks - completedTasks, color: 'hsl(var(--muted))' }
+    { name: 'Completed', value: completedTasks, color: 'hsl(160, 80%, 45%)' },
+    { name: 'Pending', value: totalTasks - completedTasks, color: 'hsl(215, 20%, 25%)' }
   ];
 
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-10 bg-muted rounded w-1/4"></div>
+        <div className="h-10 bg-secondary rounded w-1/4"></div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-24 bg-muted rounded-xl"></div>
-          ))}
+          {[1, 2, 3, 4].map(i => (<div key={i} className="h-24 bg-secondary rounded-xl"></div>))}
         </div>
       </div>
     );
   }
 
+  const chartColors = {
+    bg: 'hsl(220, 20%, 7%)',
+    border: 'hsl(215, 20%, 16%)',
+    grid: 'hsl(215, 20%, 12%)',
+    text: 'hsl(215, 20%, 45%)',
+    primary: 'hsl(210, 100%, 56%)',
+    cyan: 'hsl(185, 100%, 50%)',
+    success: 'hsl(160, 80%, 45%)',
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Track your productivity over time</p>
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Analytics</h1>
+        <p className="text-muted-foreground font-mono text-sm">Track your productivity over time</p>
       </div>
 
-      {/* Stats Overview */}
+      {/* Motivational Banner */}
+      <div className="neon-card rounded-xl p-4 animate-slide-in-right">
+        <p className="text-primary text-sm font-mono flex items-center gap-2">
+          <Sparkles className="h-4 w-4 animate-glow" />
+          <span>You've completed <strong className="text-foreground">{completedTasks} tasks</strong> and logged <strong className="text-foreground">{totalHabitLogs} habits</strong> in the last 30 days!</span>
+        </p>
+      </div>
+
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Task Completion</p>
-                <p className="text-2xl font-bold">{taskCompletionRate}%</p>
-                <p className="text-xs text-muted-foreground">{completedTasks}/{totalTasks} tasks</p>
+        {[
+          { label: 'Task Completion', value: `${taskCompletionRate}%`, sub: `${completedTasks}/${totalTasks} tasks`, icon: CheckCircle2, color: 'text-success' },
+          { label: 'Daily Habits', value: `${avgHabitsPerDay}`, sub: 'avg per day', icon: Flame, color: 'text-warning' },
+          { label: 'Goals Progress', value: `${avgGoalProgress}%`, sub: `${completedGoals} completed`, icon: Target, color: 'text-progress' },
+          { label: '30-Day Activity', value: `${totalHabitLogs + completedTasks}`, sub: 'total completions', icon: TrendingUp, color: 'text-primary' },
+        ].map((stat, i) => (
+          <Card key={i} className="neon-card animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold font-mono text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{stat.sub}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-success" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Daily Habits</p>
-                <p className="text-2xl font-bold">{avgHabitsPerDay}</p>
-                <p className="text-xs text-muted-foreground">avg per day</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                <Flame className="h-6 w-6 text-accent" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Goals Progress</p>
-                <p className="text-2xl font-bold">{avgGoalProgress}%</p>
-                <p className="text-xs text-muted-foreground">{completedGoals} completed</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-progress/10 flex items-center justify-center">
-                <Target className="h-6 w-6 text-progress" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">30-Day Activity</p>
-                <p className="text-2xl font-bold">{totalHabitLogs + completedTasks}</p>
-                <p className="text-xs text-muted-foreground">total completions</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0 shadow-md">
+        <Card className="neon-card animate-slide-up" style={{ animationDelay: '200ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg font-serif flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
               Tasks Completed This Week
             </CardTitle>
@@ -217,64 +150,48 @@ export function AnalyticsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyTaskData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" allowDecimals={false} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }} 
-                  />
-                  <Bar 
-                    dataKey="completed" 
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis dataKey="name" stroke={chartColors.text} fontSize={12} />
+                  <YAxis stroke={chartColors.text} fontSize={12} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: chartColors.bg, border: `1px solid ${chartColors.border}`, borderRadius: '8px', color: '#fff' }} />
+                  <Bar dataKey="completed" fill={chartColors.primary} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md">
+        <Card className="neon-card animate-slide-up" style={{ animationDelay: '300ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Flame className="h-5 w-5 text-accent" />
-              Habit Trend (7 Days)
+            <CardTitle className="text-lg font-serif flex items-center gap-2">
+              <Flame className="h-5 w-5 text-warning" />
+              Habit Trend (14 Days)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={habitTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" allowDecimals={false} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }} 
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="habits" 
-                    stroke="hsl(var(--accent))" 
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--accent))' }}
-                  />
-                </LineChart>
+                <AreaChart data={habitTrendData}>
+                  <defs>
+                    <linearGradient id="habitGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartColors.cyan} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={chartColors.cyan} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis dataKey="name" stroke={chartColors.text} fontSize={12} />
+                  <YAxis stroke={chartColors.text} fontSize={12} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: chartColors.bg, border: `1px solid ${chartColors.border}`, borderRadius: '8px', color: '#fff' }} />
+                  <Area type="monotone" dataKey="habits" stroke={chartColors.cyan} strokeWidth={2} fill="url(#habitGradient)" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md lg:col-span-2">
+        <Card className="neon-card lg:col-span-2 animate-slide-up" style={{ animationDelay: '400ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg font-serif flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-success" />
               Task Status Distribution
             </CardTitle>
@@ -284,39 +201,22 @@ export function AnalyticsPage() {
               <div className="h-48 w-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={taskDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
+                    <Pie data={taskDistributionData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
                       {taskDistributionData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
-                    />
+                    <Tooltip contentStyle={{ backgroundColor: chartColors.bg, border: `1px solid ${chartColors.border}`, borderRadius: '8px', color: '#fff' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="space-y-4">
                 {taskDistributionData.map((item) => (
                   <div key={item.name} className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded" 
-                      style={{ backgroundColor: item.color }}
-                    />
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }} />
                     <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.value} tasks</p>
+                      <p className="font-medium text-foreground">{item.name}</p>
+                      <p className="text-sm text-muted-foreground font-mono">{item.value} tasks</p>
                     </div>
                   </div>
                 ))}
