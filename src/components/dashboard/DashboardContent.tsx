@@ -9,9 +9,9 @@ import { AnalyticsPage } from '@/components/dashboard/pages/AnalyticsPage';
 
 export function DashboardContent() {
   return (
-    <main className="flex-1 overflow-auto">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-4 py-3">
-        <SidebarTrigger />
+    <main className="flex-1 overflow-auto bg-background">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+        <SidebarTrigger className="text-muted-foreground hover:text-primary transition-colors" />
       </div>
       <div className="p-6">
         <Routes>
