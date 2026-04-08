@@ -11,7 +11,7 @@ export default function Index() {
           <div className="w-10 h-10 rounded-lg gradient-neon flex items-center justify-center shadow-neon">
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-serif font-bold text-2xl neon-text-subtle text-foreground">NeonFlow</span>
+          <span className="font-serif font-bold text-2xl neon-text-subtle text-foreground">FlowPlanner</span>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/auth">
@@ -25,7 +25,6 @@ export default function Index() {
 
       {/* Hero */}
       <section className="container mx-auto px-4 py-20 md:py-32 text-center relative">
-        {/* Background glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="max-w-4xl mx-auto relative animate-slide-up">
@@ -110,7 +109,7 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center text-muted-foreground border-t border-border">
-        <p className="font-mono text-sm">© 2026 NeonFlow. Built for ambitious minds.</p>
+        <p className="font-mono text-sm">© 2026 FlowPlanner. Built for ambitious minds.</p>
       </footer>
     </div>
   );

@@ -52,7 +52,7 @@ export function DashboardSidebar() {
           <div className="w-8 h-8 rounded-lg gradient-neon flex items-center justify-center flex-shrink-0 shadow-neon">
             <Zap className="h-4 w-4 text-primary-foreground" />
           </div>
-          {!collapsed && <span className="font-serif font-bold text-lg neon-text-subtle text-foreground">NeonFlow</span>}
+          {!collapsed && <span className="font-serif font-bold text-lg neon-text-subtle text-foreground">FlowPlanner</span>}
         </Link>
       </SidebarHeader>
 
