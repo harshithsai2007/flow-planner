@@ -81,7 +81,7 @@ export default function Auth() {
             variant: "destructive",
           });
         } else {
-          toast({ title: "Account created!", description: "Welcome to NeonFlow! Let's build great habits." });
+          toast({ title: "Account created!", description: "Welcome to FlowPlanner! Let's build great habits." });
           navigate('/dashboard');
         }
       }
@@ -92,18 +92,15 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen gradient-dark flex flex-col relative overflow-hidden">
-      {/* Background glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Header */}
       <header className="p-6 relative z-10 animate-fade-in">
         <Link to="/" className="inline-flex items-center gap-2 text-foreground font-serif font-bold text-xl">
           <Zap className="h-6 w-6 text-primary" />
-          <span className="neon-text-subtle">NeonFlow</span>
+          <span className="neon-text-subtle">FlowPlanner</span>
         </Link>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-md animate-scale-in">
           <Card className="neon-card border-primary/10">
